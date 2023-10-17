@@ -1,10 +1,9 @@
 #ifndef TEXTURE_H
 #define TEXTURE_H
 
-
-
 #include "stb_image.h"
-class Texture
+
+class Texture 
 {
 public:
     int limite;
@@ -96,8 +95,8 @@ public:
 
     void ViewTextureMap(int num, unsigned int nameMap)
     {
-        glActiveTexture(GL_TEXTURE0 + num);
-        glBindTexture(GL_TEXTURE_2D, nameMap);
+      glActiveTexture(GL_TEXTURE0 + num);
+      glBindTexture(GL_TEXTURE_2D, nameMap);
     }
 
     string UniformTexture()
@@ -107,12 +106,12 @@ public:
         string numero = "0";
         int n = stoi(numero);
         for (int i = 0; i < limite; i++)
-        {
+        {           
             completo = "";
             n += 1;
 
             numero = to_string(n);
-
+            
             completo.append(str);
             completo.append(numero);
         }
