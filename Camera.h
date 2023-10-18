@@ -22,10 +22,10 @@ public:
     vec3 Up;
     vec3 Right;
     vec3 WorldUp;
-    
+
     float Yaw;
     float Pitch;
-    
+
     float MovementSpeed;
     float MouseSensitivity;
     float Zoom;
@@ -38,7 +38,7 @@ public:
         Pitch = pitch;
         updateCameraVectors();
     }
-    
+
     Camera(float posX, float posY, float posZ, float upX, float upY, float upZ, float yaw, float pitch) : Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVITY), Zoom(ZOOM)
     {
         Position = vec3(posX, posY, posZ);
@@ -57,13 +57,25 @@ public:
     {
         float velocity = MovementSpeed * deltaTime;
         if (direction == FORWARD)
+        {
             Position += Front * velocity;
+        }
         if (direction == BACKWARD)
+        {
             Position -= Front * velocity;
+        }
         if (direction == LEFT)
+        {
             Position -= Right * velocity;
+        }
         if (direction == RIGHT)
+        {
             Position += Right * velocity;
+        }
+       Position.y = 1.24497f;
+        cout << "Posicion y: "<< Position.y << endl;
+        cout << "Posicion x: " << Position.x << endl;
+        cout << "Posicion z: " << Position.z << endl;
     }
 
     void ProcessMouseMovement(float xoffset, float yoffset, GLboolean constrainPitch = true)
@@ -87,7 +99,7 @@ public:
 
     void ProcessMouseScroll(float yoffset)
     {
-        
+
         if (Zoom >= 1.0f && Zoom <= 45.0f)
             Zoom -= yoffset;
         if (Zoom < 1.0f)
@@ -104,8 +116,8 @@ private:
         front.y = sin(radians(Pitch));
         front.z = sin(radians(Yaw)) * cos(radians(Pitch));
         Front = normalize(front);
-        
-        Right = normalize(cross(Front, WorldUp)); 
+
+        Right = normalize(cross(Front, WorldUp));
         Up = normalize(cross(Right, Front));
     }
 };

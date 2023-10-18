@@ -82,8 +82,8 @@ int main()
 	//mandamos a llamar al modelo en lugar del texture y el light ya que esto lo hace el modelo
 	//mandamos la direccion del modelo obj
 	//Model ourModel("Modelos/backpack/backpack.obj");
-	Model ourModel("Modelos/laberinto/Laberinto.obj");
-
+	Model ourModel("Modelos/laberinto/Laberintobaseprueba.obj");
+	camera.Position = vec3(0.0f, 0.0f, 0.0f);
 	updateWindow(window, ourShader, ourModel);
 	glfwTerminate();
 	
@@ -134,79 +134,35 @@ void processInput(GLFWwindow* window)
 	{
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	}
-
+	
 	CameraInput(window);
 }
+
+
 void CameraInput(GLFWwindow* window)
 {
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
 	{
 		camera.ProcessKeyboard(FORWARD, deltaTime);
+		//cout << "W" << endl;
 	}
 	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
 	{
 		camera.ProcessKeyboard(BACKWARD, deltaTime);
+		//cout << "S" << endl;
 	}
 	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
 	{
 		camera.ProcessKeyboard(LEFT, deltaTime);
+		//cout << "A" << endl;
 	}
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
 	{
 		camera.ProcessKeyboard(RIGHT, deltaTime);
+		//cout << "D" << endl;
 	}
 }
 
-
-/*void CameraInput(GLFWwindow* window, Camera& camera)
-{
-	static glm::vec3 cameraPosition = glm::vec3(0.0f, 1.0f, 0.0f); // Posición inicial de la cámara
-	static glm::vec3 cameraVelocity = glm::vec3(0.0f);
-	static bool isOnGround = false;
-	static float groundHeight = 1.0f; // Altura del suelo
-
-	if (isOnGround)
-	{
-		cameraVelocity.y = 0.0f; // Resetear la velocidad vertical cuando estás en el suelo
-	}
-	else
-	{
-		cameraVelocity.y -= 9.8f * deltaTime; // Aplicar gravedad
-	}
-
-	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
-	{
-		cameraVelocity += camera.Front * 5.0f * deltaTime;
-	}
-	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
-	{
-		cameraVelocity -= camera.Front * 5.0f * deltaTime;
-	}
-	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
-	{
-		cameraVelocity -= camera.Right * 5.0f * deltaTime;
-	}
-	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
-	{
-		cameraVelocity += camera.Right * 5.0f * deltaTime;
-	}
-
-	cameraPosition += cameraVelocity * deltaTime;
-
-	// Limitar la posición vertical para que no caiga por debajo del suelo
-	if (cameraPosition.y < groundHeight)
-	{
-		cameraPosition.y = groundHeight;
-		isOnGround = true;
-	}
-	else
-	{
-		isOnGround = false;
-	}
-
-	// Actualizar la posición de la cámara
-	camera.Position = cameraPosition;
-}*/
 
 void Mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
 {
@@ -237,9 +193,11 @@ void Scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 
 void updateWindow(GLFWwindow* window, Shader ourShader, Model ourModel)
 {
+	
 	//CARGA DE VENTAANA CADA FRAME
 	while (!glfwWindowShouldClose(window))
 	{
+		
 		float currentTime = glfwGetTime();
 		deltaTime = currentTime - lastTime;
 		lastTime = currentTime;
@@ -255,7 +213,7 @@ void updateWindow(GLFWwindow* window, Shader ourShader, Model ourModel)
 		TransformCubo(ourShader);
 		ourModel.Draw(ourShader);
 
-	//	glm::vec3 cameraPosition = camera.Position;
+		//glm::vec3 cameraPosition = camera.Position;
 		//std::cout << "Posición de la cámara: (" << cameraPosition.x << ", " << cameraPosition.y << ", " << cameraPosition.z << ")" << std::endl;
 
 
