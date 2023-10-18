@@ -8,7 +8,7 @@ Make sure you have the following libraries included before compiling the project
 - [Assimp](https://www.assimp.org/): 3D model import library.
 > [!IMPORTANT]
 > Ensure that you include the libraries in your project and configure the appropriate include directories before compiling.
-##Required Libraries
+## Required Libraries
 Make sure you have the following libraries included in your project:
 - `assimp-vc142-mt.lib`
 - `glfw3.lib`
