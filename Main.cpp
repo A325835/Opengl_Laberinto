@@ -228,8 +228,8 @@ void TransformCubo(Shader ourShader)//cambia
 	
 		mat4 modelo = mat4(1.0f);
 		//se modifico 
-		modelo = translate(modelo, vec3(0.0f, 0.0f, 0.0f));
-		modelo = rotate(modelo, radians(-45.0f), vec3(0.3f, 0.7f, 0.0f));
+	//	modelo = translate(modelo, vec3(0.0f, 0.0f, 0.0f));
+		//modelo = rotate(modelo, radians(-45.0f), vec3(0.3f, 0.7f, 0.0f));
 		ourShader.setMat4("model", modelo);
 		glDrawElements(GL_TRIANGLES, 64, GL_UNSIGNED_INT, 0);
 	
