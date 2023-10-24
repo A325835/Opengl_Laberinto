@@ -10,7 +10,7 @@ enum Camera_Movement {
 
 const float YAW = -90.0f;
 const float PITCH = 0.0f;
-const float SPEED = 2.5f;
+const float SPEED = 10.0f;
 const float SENSITIVITY = 0.1f;
 const float ZOOM = 45.0f;
 
@@ -29,6 +29,22 @@ public:
     float MovementSpeed;
     float MouseSensitivity;
     float Zoom;
+    bool IsMouseLocked = true;
+
+    void LockMouse()
+    {
+        IsMouseLocked = true;
+    }
+
+    void UnlockMouse()
+    {
+        IsMouseLocked = false;
+    }
+
+    void ToggleMouseLock()
+    {
+        IsMouseLocked = !IsMouseLocked;
+    }
 
     Camera(vec3 position = vec3(0.0f, 0.0f, 0.0f), vec3 up = vec3(0.0f, 1.0f, 0.0f), float yaw = YAW, float pitch = PITCH) : Front(vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVITY), Zoom(ZOOM)
     {
@@ -37,6 +53,7 @@ public:
         Yaw = yaw;
         Pitch = pitch;
         updateCameraVectors();
+        IsMouseLocked = true;
     }
 
     Camera(float posX, float posY, float posZ, float upX, float upY, float upZ, float yaw, float pitch) : Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVITY), Zoom(ZOOM)
@@ -80,32 +97,38 @@ public:
 
     void ProcessMouseMovement(float xoffset, float yoffset, GLboolean constrainPitch = true)
     {
-        xoffset *= MouseSensitivity;
-        yoffset *= MouseSensitivity;
-
-        Yaw += xoffset;
-        Pitch += yoffset;
-
-        if (constrainPitch)
+        if (IsMouseLocked)
         {
-            if (Pitch > 89.0f)
-                Pitch = 89.0f;
-            if (Pitch < -89.0f)
-                Pitch = -89.0f;
-        }
+            xoffset *= MouseSensitivity;
+            yoffset *= MouseSensitivity;
 
-        updateCameraVectors();
+            Yaw += xoffset;
+            Pitch += yoffset;
+
+            if (constrainPitch)
+            {
+                if (Pitch > 89.0f)
+                    Pitch = 89.0f;
+                if (Pitch < -89.0f)
+                    Pitch = -89.0f;
+            }
+
+            updateCameraVectors();
+        }
+        
     }
 
     void ProcessMouseScroll(float yoffset)
     {
-
-        if (Zoom >= 1.0f && Zoom <= 45.0f)
-            Zoom -= yoffset;
-        if (Zoom < 1.0f)
-            Zoom = 1.0f;
-        if (Zoom > 45.0f)
-            Zoom = 45.0f;
+        if (IsMouseLocked) 
+        {
+            if (Zoom >= 1.0f && Zoom <= 45.0f)
+                Zoom -= yoffset;
+            if (Zoom < 1.0f)
+                Zoom = 1.0f;
+            if (Zoom > 45.0f)
+                Zoom = 45.0f;
+        }
     }
 
 private:
