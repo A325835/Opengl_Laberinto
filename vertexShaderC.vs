@@ -7,6 +7,9 @@ layout (location = 3) in vec2 aTexCoords;
 out vec2 TexCoords;
 out float UseTexture;
 out vec4 Color;
+out vec3 FragPos;
+out vec3 Normal;
+
 
 uniform mat4 model;
 uniform mat4 view;
