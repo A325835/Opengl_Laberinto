@@ -34,6 +34,11 @@ bool firstMouse = true;
 mat4 projection;
 mat4 view;
 
+bool draw = true;
+float sizeCube = 1.0f;
+float inten = 0.2f;
+float clearColor[4] = { 0.6f, 0.8f, 0.4f, 1.0f };
+
 void initGLFWVersion();
 bool gladLoad();
 void framebuffer_size_callback(GLFWwindow* window, int w, int h);
@@ -48,6 +53,10 @@ void updateWindow(GLFWwindow* window, Shader ourShader, Model ourModel );
 void TransformCubo(Shader ourShader);//se necesitan realizar cambios
 void TransformCamera(Shader ourShader);
 void CameraUniform(Shader shaderName);
+
+void InicialicedImGUI(GLFWwindow* window);
+void ImGUI();
+void FinalizarImGUI();
 
 int main()
 {
@@ -217,14 +226,16 @@ void updateWindow(GLFWwindow* window, Shader ourShader, Model ourModel)
 		ourShader.setVec3("light.ambient", 0.5f, 0.5f, 0.5f);
 		ourShader.setVec3("light.diffuse", 0.55f, 0.5f, 0.5f);
 		ourShader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
-
-
+		
 		TransformCamera(ourShader);
 		TransformCubo(ourShader);
-		ourModel.Draw(ourShader);
+		if(draw)
+			ourModel.Draw(ourShader);
+
+		ImGUI();
 
 		//glm::vec3 cameraPosition = camera.Position;
-		//std::cout << "Posición de la cámara: (" << cameraPosition.x << ", " << cameraPosition.y << ", " << cameraPosition.z << ")" << std::endl;
+		//std::cout << "PosiciÃ³n de la cÃ¡mara: (" << cameraPosition.x << ", " << cameraPosition.y << ", " << cameraPosition.z << ")" << std::endl;
 
 
 		glfwSwapBuffers(window);
@@ -256,4 +267,33 @@ void CameraUniform(Shader shaderName)
 {
 	shaderName.setMat4("projection", projection);
 	shaderName.setMat4("view", view);
+}
+
+void InicialicedImGUI(GLFWwindow* window)
+{
+	IMGUI_CHECKVERSION();
+	CreateContext();
+	ImGuiIO& io = GetIO();
+	(void)io;
+	StyleColorsDark();
+	ImGui_ImplGlfw_InitForOpenGL(window, true);
+	ImGui_ImplOpenGL3_Init("#version 330");
+}
+void ImGUI()
+{
+	Begin("Miku");
+	Text("Controla los elementos del modelo");
+	Checkbox("Show-Model", &draw);
+	SliderFloat("Size", &sizeCube, 0.1f, 2.0f);
+	ColorEdit4("BG", clearColor);
+	End();
+
+	Render();
+	ImGui_ImplOpenGL3_RenderDrawData(GetDrawData());
+}
+void FinalizarImGUI()
+{
+	ImGui_ImplOpenGL3_Shutdown();
+	ImGui_ImplGlfw_Shutdown();
+	DestroyContext();
 }
