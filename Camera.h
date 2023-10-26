@@ -94,6 +94,10 @@ public:
         {
             Position += Right * velocity;
         }
+        if (!isJumping)
+        {
+            Position.y = 0.0;
+        }
         Position.y = std::max(Position.y, 0.0f);
     }
 
