@@ -39,7 +39,7 @@ bool firstMouse = true;
 mat4 projection;
 mat4 view;
 
-bool draw;
+bool draw = true;
 float sizeCube = 1.0f;
 float inten = 0.2f;
 float clearColor[4] = { 0.6f, 0.8f, 0.4f, 1.0f };
@@ -60,7 +60,7 @@ void TransformCamera(Shader ourShader);
 void CameraUniform(Shader shaderName);
 
 void InicialicedImGUI(GLFWwindow* window);
-void CreacionDeElemento();
+void ImGUI();
 void FinalizarImGUI();
 
 int main()
@@ -241,13 +241,22 @@ void updateWindow(GLFWwindow* window, Shader ourShader, Model ourModel)
 		NewFrame();
 
 		ourShader.use();
+
+		ourShader.setFloat("material.shininess", 64.0f);
+		ourShader.setInt("material.diffuse", 0);
+		ourShader.setInt("material.specular", 1);
+
+		ourShader.setVec3("light.position", vec3(1.2, 1.0, 15.0));
+		ourShader.setVec3("light.ambient", 0.5f, 0.5f, 0.5f);
+		ourShader.setVec3("light.diffuse", 0.55f, 0.5f, 0.5f);
+		ourShader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
 		
 		TransformCamera(ourShader);
 		TransformCubo(ourShader);
 		if(draw)
 			ourModel.Draw(ourShader);
 
-		CreacionDeElemento();
+		ImGUI();
 
 		//glm::vec3 cameraPosition = camera.Position;
 		//std::cout << "Posición de la cámara: (" << cameraPosition.x << ", " << cameraPosition.y << ", " << cameraPosition.z << ")" << std::endl;
@@ -292,7 +301,7 @@ void InicialicedImGUI(GLFWwindow* window)
 	ImGui_ImplGlfw_InitForOpenGL(window, true);
 	ImGui_ImplOpenGL3_Init("#version 330");
 }
-void CreacionDeElemento()
+void ImGUI()
 {
 	Begin("Miku");
 	Text("Controla los elementos del modelo");
