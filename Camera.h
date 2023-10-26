@@ -13,6 +13,8 @@ const float PITCH = 0.0f;
 const float SPEED = 5.5f;
 const float SENSITIVITY = 0.1f;
 const float ZOOM = 45.0f;
+const float gravity = -9.8f;
+
 
 class Camera
 {
@@ -22,6 +24,7 @@ public:
     vec3 Up;
     vec3 Right;
     vec3 WorldUp;
+    vec3 jumpVelocity = vec3(0.0f, 0.0f, 0.0f);
 
     float Yaw;
     float Pitch;
@@ -30,6 +33,7 @@ public:
     float MouseSensitivity;
     float Zoom;
     bool IsMouseLocked = true;
+    bool isJumping = false;
 
     void LockMouse()
     {
@@ -63,6 +67,7 @@ public:
         Yaw = yaw;
         Pitch = pitch;
         updateCameraVectors();
+        IsMouseLocked = true;
     }
 
     mat4 GetViewMatrix()
@@ -89,10 +94,7 @@ public:
         {
             Position += Right * velocity;
         }
-       Position.y = 1.24497f;
-        cout << "Posicion y: "<< Position.y << endl;
-        cout << "Posicion x: " << Position.x << endl;
-        cout << "Posicion z: " << Position.z << endl;
+        Position.y = std::max(Position.y, 0.0f);
     }
 
     void ProcessMouseMovement(float xoffset, float yoffset, GLboolean constrainPitch = true)
@@ -128,6 +130,30 @@ public:
                 Zoom = 1.0f;
             if (Zoom > 45.0f)
                 Zoom = 45.0f;
+        }
+    }
+
+    void Jump(float jumpSpeed)
+    {
+        if (!isJumping) {
+            isJumping = true;
+            jumpVelocity.y = jumpSpeed;
+        }
+    }
+
+    void Update(float deltaTime)
+    {
+        if (isJumping) {
+            // Calcula la nueva posición vertical
+            Position.y += jumpVelocity.y * deltaTime;
+            jumpVelocity.y += gravity * deltaTime;
+
+            // Verifica si el jugador ha llegado al suelo
+            if (Position.y <= 0.0f) {
+                Position.y = 0.0f;
+                isJumping = false;
+                jumpVelocity.y = 0.0f;
+            }
         }
     }
 

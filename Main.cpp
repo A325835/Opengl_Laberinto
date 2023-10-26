@@ -44,6 +44,10 @@ float sizeCube = 1.0f;
 float inten = 0.2f;
 float clearColor[4] = { 0.6f, 0.8f, 0.4f, 1.0f };
 
+//MECHANICS
+//bool isJumping = false;
+//MEHCANICS
+
 void initGLFWVersion();
 bool gladLoad();
 void framebuffer_size_callback(GLFWwindow* window, int w, int h);
@@ -188,7 +192,10 @@ void CameraInput(GLFWwindow* window)
 	{
 		camera.UnlockMouse(); // Desbloquea el mouse cuando se presiona la tecla "U"
 		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-		
+	}
+	if (glfwGetKey(window, GLFW_KEY_SPACE)) {
+		// Inicia el salto
+		camera.Jump(9.8f);
 	}
 }
 
@@ -239,6 +246,8 @@ void updateWindow(GLFWwindow* window, Shader ourShader, Model ourModel)
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
 		NewFrame();
+
+		camera.Update(deltaTime);
 
 		ourShader.use();
 
@@ -308,6 +317,10 @@ void ImGUI()
 	Checkbox("Show-Model", &draw);
 	SliderFloat("Size", &sizeCube, 0.1f, 2.0f);
 	ColorEdit4("BG", clearColor);
+	Text("Unlock Cursor"); SameLine();
+	TextColored(ImVec4(1, 1, 0, 1), "U"); SameLine(150);
+	Text("Lock Cursor"); SameLine();
+	TextColored(ImVec4(1, 1, 0, 1), "L");
 	End();
 
 	Render();
