@@ -1,9 +1,5 @@
 #include <iostream>
 
-#include "imgui.h"
-#include "imgui_impl_glfw.h"
-#include "imgui_impl_opengl3.h"
-
 #include "glad/glad.h"
 #include "GLFW/glfw3.h"
 
@@ -20,10 +16,9 @@
 #include "Model.h"
 
 using namespace std;
-using namespace ImGui;
 
-const unsigned height = 720;
-const unsigned width = 1200;
+const unsigned height = 600;
+const unsigned width = 800;
 
 vec3 cameraPos = vec3(0.0f, 0.0f, 3.0f);
 vec3 cameraFront = vec3(0.0f, 0.0f, -1.0f);
@@ -86,7 +81,6 @@ int main()
 	glfwSetCursorPosCallback(window, Mouse_callback);
 	glfwSetScrollCallback(window, Scroll_callback);
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-	glEnable(GL_DEPTH_TEST);
 	
 	//se manda a llamar el flip, voltea la textura
 	stbi_set_flip_vertically_on_load(true);
@@ -99,13 +93,10 @@ int main()
 	//Model ourModel("Modelos/backpack/backpack.obj");
 	Model ourModel("Modelos/laberinto/Laberintobaseprueba.obj");
 	camera.Position = vec3(0.0f, 0.0f, 0.0f);
-
-	InicialicedImGUI(window);
-
 	updateWindow(window, ourShader, ourModel);
-
 	glfwTerminate();
-	return 0;
+	
+		return 0;
 }
 
 void initGLFWVersion() 
@@ -179,17 +170,6 @@ void CameraInput(GLFWwindow* window)
 		camera.ProcessKeyboard(RIGHT, deltaTime);
 		//cout << "D" << endl;
 	}
-	if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS)
-	{
-		camera.LockMouse(); // Bloquea el mouse cuando se presiona la tecla "L"
-		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-	}
-	if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS)
-	{
-		camera.UnlockMouse(); // Desbloquea el mouse cuando se presiona la tecla "U"
-		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-		
-	}
 }
 
 
@@ -233,12 +213,8 @@ void updateWindow(GLFWwindow* window, Shader ourShader, Model ourModel)
 
 		processInput(window);
 
-		glClearColor(clearColor[0], clearColor[1], clearColor[2], clearColor[3]);
+		glClearColor(0.6f, 0.8f, 0.4f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-		ImGui_ImplOpenGL3_NewFrame();
-		ImGui_ImplGlfw_NewFrame();
-		NewFrame();
 
 		ourShader.use();
 
@@ -259,7 +235,7 @@ void updateWindow(GLFWwindow* window, Shader ourShader, Model ourModel)
 		ImGUI();
 
 		//glm::vec3 cameraPosition = camera.Position;
-		//std::cout << "Posición de la cámara: (" << cameraPosition.x << ", " << cameraPosition.y << ", " << cameraPosition.z << ")" << std::endl;
+		//std::cout << "PosiciÃ³n de la cÃ¡mara: (" << cameraPosition.x << ", " << cameraPosition.y << ", " << cameraPosition.z << ")" << std::endl;
 
 
 		glfwSwapBuffers(window);
@@ -270,12 +246,14 @@ void updateWindow(GLFWwindow* window, Shader ourShader, Model ourModel)
 
 void TransformCubo(Shader ourShader)//cambia
 {
+	
 		mat4 modelo = mat4(1.0f);
 		//se modifico 
-	//	modelo = translate(modelo, vec3(0.0f, 0.0f, 0.0f));
+		modelo = translate(modelo, vec3(0.0f, 0.0f, 0.0f));
 		//modelo = rotate(modelo, radians(-45.0f), vec3(0.3f, 0.7f, 0.0f));
-		modelo = scale(modelo, vec3(sizeCube));
 		ourShader.setMat4("model", modelo);
+		glDrawElements(GL_TRIANGLES, 64, GL_UNSIGNED_INT, 0);
+	
 }
 
 void TransformCamera(Shader ourShader)
