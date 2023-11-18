@@ -109,7 +109,7 @@ int main()
 	//mandamos la direccion del modelo obj
 	//Model ourModel("Modelos/backpack/backpack.obj");
 	Shader ourShaderSky("vertexShaderSky.vs", "fragmenShaderSky.fs");
-	Model ourModel("Modelos/laberinto/Laberintobaseprueba.obj");
+	Model ourModel("Modelos/laberinto/Laberinto.obj");
 	Texture1 ourTextureSky(textureSky);
 
 	camera.Position = vec3(0.0f, 0.0f, 0.0f);

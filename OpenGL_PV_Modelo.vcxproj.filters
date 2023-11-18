@@ -118,5 +118,8 @@
     <None Include="fragmenShaderSky.fs">
       <Filter>Archivos de recursos</Filter>
     </None>
+    <None Include="vertexShaderSky.vs">
+      <Filter>Archivos de recursos</Filter>
+    </None>
   </ItemGroup>
 </Project>

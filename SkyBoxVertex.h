@@ -42,10 +42,10 @@ vector<string> faces
 
     */
 
-    "Imagenes/Sky/elyvisions/rainbow_ft.png",
-    "Imagenes/Sky/elyvisions/rainbow_bk.png",
-    "Imagenes/Sky/elyvisions/rainbow_up.png",
-    "Imagenes/Sky/elyvisions/rainbow_dn.png",
-    "Imagenes/Sky/elyvisions/rainbow_rt.png",
-    "Imagenes/Sky/elyvisions/rainbow_lf.png"
+    "Imagenes/Sky/elyvisions/dark_ft.png",
+    "Imagenes/Sky/elyvisions/dark_bk.png",
+    "Imagenes/Sky/elyvisions/dark_up.png",
+    "Imagenes/Sky/elyvisions/dark_dn.png",
+    "Imagenes/Sky/elyvisions/dark_rt.png",
+    "Imagenes/Sky/elyvisions/dark_lf.png"
 };
