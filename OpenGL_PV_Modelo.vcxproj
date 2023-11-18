@@ -163,11 +163,13 @@
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="Model.h" />
     <ClInclude Include="Shader.h" />
+    <ClInclude Include="SkyBoxVertex.h" />
     <ClInclude Include="stb_image.h" />
     <ClInclude Include="Texture.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="assimp-vc142-mt.dll" />
+    <None Include="fragmenShaderSky.fs" />
     <None Include="fragmentShaderC.fs" />
     <None Include="vertexShaderC.vs" />
   </ItemGroup>

@@ -17,10 +17,15 @@
 #include "Shader.h"
 #include "Camera.h"
 #include "stb_image.h"
+#include "SkyBoxVertex.h"
 #include "Model.h"
+#include "Texture.h"
 
 using namespace std;
 using namespace ImGui;
+
+unsigned int VBOSKY, VAOSKY, EBOSKY;
+unsigned int textureSky;
 
 const unsigned height = 720;
 const unsigned width = 1200;
@@ -50,17 +55,20 @@ float clearColor[4] = { 0.6f, 0.8f, 0.4f, 1.0f };
 
 void initGLFWVersion();
 bool gladLoad();
-void framebuffer_size_callback(GLFWwindow* window, int w, int h);
 
 void framebuffer_size_callback(GLFWwindow* window, int w, int h);
 void processInput(GLFWwindow* window);
 void CameraInput(GLFWwindow* window);
 void Mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void Scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
-void updateWindow(GLFWwindow* window, Shader ourShader, Model ourModel );
+void updateWindow(GLFWwindow* window, Shader ourShader, Model ourModel, Shader ourShaderSky, Texture1 ourTextureSky);
+
+
+void GeneracionBufferSky();
+void VertexAttribute(int layout, int data, int total, int start);
 
 void TransformCubo(Shader ourShader);//se necesitan realizar cambios
-void TransformCamera(Shader ourShader);
+void TransformCamera(Shader ourShader, bool isSky);
 void CameraUniform(Shader shaderName);
 
 void InicialicedImGUI(GLFWwindow* window);
@@ -90,7 +98,6 @@ int main()
 	glfwSetCursorPosCallback(window, Mouse_callback);
 	glfwSetScrollCallback(window, Scroll_callback);
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-	glEnable(GL_DEPTH_TEST);
 	
 	//se manda a llamar el flip, voltea la textura
 	stbi_set_flip_vertically_on_load(true);
@@ -101,12 +108,26 @@ int main()
 	//mandamos a llamar al modelo en lugar del texture y el light ya que esto lo hace el modelo
 	//mandamos la direccion del modelo obj
 	//Model ourModel("Modelos/backpack/backpack.obj");
+	Shader ourShaderSky("vertexShaderSky.vs", "fragmenShaderSky.fs");
 	Model ourModel("Modelos/laberinto/Laberintobaseprueba.obj");
+	Texture1 ourTextureSky(textureSky);
+
 	camera.Position = vec3(0.0f, 0.0f, 0.0f);
+
+	GeneracionBufferSky();
+	ourTextureSky.GeneraTexturaSky(faces);
+	ourShaderSky.use();
+	ourShaderSky.setInt(ourTextureSky.UniformTextureSky(), 0);
 
 	InicialicedImGUI(window);
 
-	updateWindow(window, ourShader, ourModel);
+	updateWindow(window, ourShader, ourModel,ourShaderSky ,ourTextureSky);
+
+	//SKY
+	glDeleteVertexArrays(1, &VAOSKY);
+	glDeleteBuffers(1, &VBOSKY);
+	glDeleteBuffers(1, &EBOSKY);
+
 
 	glfwTerminate();
 	return 0;
@@ -227,7 +248,7 @@ void Scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 }
 
 
-void updateWindow(GLFWwindow* window, Shader ourShader, Model ourModel)
+void updateWindow(GLFWwindow* window, Shader ourShader, Model ourModel, Shader ourShaderSky, Texture1 ourTextureSky)
 {
 	
 	//CARGA DE VENTAANA CADA FRAME
@@ -260,10 +281,18 @@ void updateWindow(GLFWwindow* window, Shader ourShader, Model ourModel)
 		ourShader.setVec3("light.diffuse", 0.55f, 0.5f, 0.5f);
 		ourShader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
 		
-		TransformCamera(ourShader);
+		TransformCamera(ourShader, false);
 		TransformCubo(ourShader);
-		if(draw)
-			ourModel.Draw(ourShader);
+		ourModel.Draw(ourShader);
+
+		//SKY
+		glDepthFunc(GL_LEQUAL);
+		ourShaderSky.use();
+		TransformCamera(ourShaderSky, true);
+		glBindVertexArray(VAOSKY);
+		ourTextureSky.ViewTextureSKY();
+		glDepthFunc(GL_LESS);
+
 
 		ImGUI();
 
@@ -281,16 +310,25 @@ void TransformCubo(Shader ourShader)//cambia
 {
 		mat4 modelo = mat4(1.0f);
 		//se modifico 
-	//	modelo = translate(modelo, vec3(0.0f, 0.0f, 0.0f));
+	//modelo = translate(modelo, vec3(0.0f, 0.0f, 0.0f));
 		//modelo = rotate(modelo, radians(-45.0f), vec3(0.3f, 0.7f, 0.0f));
 		modelo = scale(modelo, vec3(sizeCube));
 		ourShader.setMat4("model", modelo);
 }
 
-void TransformCamera(Shader ourShader)
+void TransformCamera(Shader ourShader, bool isSky)
 {
 	projection = perspective(radians(camera.Zoom), (float)width / (float)height, 0.1f, 100.0f);
-	view = camera.GetViewMatrix();
+
+	if (isSky)
+	{
+		view = mat4(mat3(camera.GetViewMatrix()));
+	}
+	else
+	{
+		view = camera.GetViewMatrix();
+	}
+
 	CameraUniform(ourShader);
 }
 
@@ -331,4 +369,29 @@ void FinalizarImGUI()
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui_ImplGlfw_Shutdown();
 	DestroyContext();
+}
+
+void GeneracionBufferSky()
+{
+	glGenVertexArrays(1, &VAOSKY);
+	glGenBuffers(1, &VBOSKY);
+	glGenBuffers(1, &EBOSKY);
+	glBindVertexArray(VAOSKY);
+
+	glBindBuffer(GL_ARRAY_BUFFER, VBOSKY);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), skyboxVertices, GL_STATIC_DRAW);
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBOSKY);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indicesSky), indicesSky, GL_STATIC_DRAW);
+
+	VertexAttribute(0, 3, 3, 0);
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
+}
+
+void VertexAttribute(int layout, int data, int total, int start)
+{
+	glVertexAttribPointer(layout, data, GL_FLOAT, GL_FALSE, total * sizeof(float), (void*)(start * sizeof(float)));
+	glEnableVertexAttribArray(layout);
 }
