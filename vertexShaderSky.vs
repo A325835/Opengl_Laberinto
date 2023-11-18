@@ -8,6 +8,7 @@ uniform mat4 projection;
 
 void main()
 {
-    ourTexture1 = aPos;
-    gl_Position = projection * view * vec4(aPos, 1.0);;
+     ourTexture1 = aPos;
+    vec4 pos = projection * view * vec4(aPos, 1.0);
+    gl_Position = pos.xyww;
 }

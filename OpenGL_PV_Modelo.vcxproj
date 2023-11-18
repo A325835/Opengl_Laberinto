@@ -172,6 +172,7 @@
     <None Include="fragmenShaderSky.fs" />
     <None Include="fragmentShaderC.fs" />
     <None Include="vertexShaderC.vs" />
+    <None Include="vertexShaderSky.vs" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
