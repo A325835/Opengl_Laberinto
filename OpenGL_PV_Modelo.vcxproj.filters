@@ -101,6 +101,9 @@
     <ClInclude Include="imgui\imstb_truetype.h">
       <Filter>Archivos de encabezado\imgui</Filter>
     </ClInclude>
+    <ClInclude Include="SkyBoxVertex.h">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="fragmentShaderC.fs">
@@ -111,6 +114,12 @@
     </None>
     <None Include="assimp-vc142-mt.dll">
       <Filter>Archivos de encabezado</Filter>
+    </None>
+    <None Include="fragmenShaderSky.fs">
+      <Filter>Archivos de recursos</Filter>
+    </None>
+    <None Include="vertexShaderSky.vs">
+      <Filter>Archivos de recursos</Filter>
     </None>
   </ItemGroup>
 </Project>
