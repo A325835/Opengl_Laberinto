@@ -272,14 +272,21 @@ void updateWindow(GLFWwindow* window, Shader ourShader, Model ourModel, Shader o
 
 		ourShader.use();
 
-		ourShader.setFloat("material.shininess", 64.0f);
+		ourShader.setFloat("material.shininess", 32.0f);
 		ourShader.setInt("material.diffuse", 0);
 		ourShader.setInt("material.specular", 1);
+		
 
-		ourShader.setVec3("light.position", vec3(1.2, 1.0, 15.0));
-		ourShader.setVec3("light.ambient", 0.5f, 0.5f, 0.5f);
-		ourShader.setVec3("light.diffuse", 0.55f, 0.5f, 0.5f);
+		ourShader.setVec3("light.position", camera.Position);
+		ourShader.setVec3("light.direction", camera.Front);
+		ourShader.setFloat("light.outerCutOff", cos(radians(17.5)));
+		ourShader.setFloat("light.cutOut", cos(radians(17.5f)));
+		ourShader.setVec3("light.ambient", 0.1f, 0.1f, 0.1f);
+		ourShader.setVec3("light.diffuse", 0.8f, 0.8f, 0.8f);
 		ourShader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
+		ourShader.setFloat("light.constant", 1.0f);
+		ourShader.setFloat("light.lineal", 0.09f);
+		ourShader.setFloat("light.quatratic", 0.032f);
 		
 		TransformCamera(ourShader, false);
 		TransformCubo(ourShader);
