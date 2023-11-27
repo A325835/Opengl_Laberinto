@@ -129,6 +129,12 @@ public:
         }
     }
 
+    void ViewTextureMap(int num, unsigned int nameMap)
+    {
+        glActiveTexture(GL_TEXTURE0 + num);
+        glBindTexture(GL_TEXTURE_2D, nameMap);
+    }
+
     void ViewTextureSKY()
     {
         glActiveTexture(GL_TEXTURE0);

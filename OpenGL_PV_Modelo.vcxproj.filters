@@ -121,5 +121,11 @@
     <None Include="vertexShaderSky.vs">
       <Filter>Archivos de recursos</Filter>
     </None>
+    <None Include="vertexShaderN.vs">
+      <Filter>Archivos de recursos</Filter>
+    </None>
+    <None Include="fragmentShaderN.fs">
+      <Filter>Archivos de recursos</Filter>
+    </None>
   </ItemGroup>
 </Project>
