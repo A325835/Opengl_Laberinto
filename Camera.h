@@ -13,7 +13,7 @@ const float PITCH = 0.0f;
 const float SPEED = 5.5f;
 const float SENSITIVITY = 0.1f;
 const float ZOOM = 45.0f;
-const float gravity = -9.8f;
+const float gravity = -13.8f;
 
 
 class Camera

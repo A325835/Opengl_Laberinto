@@ -25,13 +25,18 @@ using namespace std;
 using namespace ImGui;
 
 unsigned int VBOSKY, VAOSKY, EBOSKY;
+unsigned int VBO_N, VAO_N = 0, EBO_N;
 unsigned int textureSky;
+unsigned int specularMap;
+unsigned int normalMap;
+unsigned int diffuseMap;
+unsigned int heightMap;
 
-const unsigned height = 720;
-const unsigned width = 1200;
+const unsigned height = 936;
+const unsigned width = 1664;
 
 vec3 cameraPos = vec3(0.0f, 0.0f, 3.0f);
-vec3 cameraFront = vec3(0.0f, 0.0f, -1.0f);
+vec3 cameraFront = vec3(0.0f, 0.0f, -3.0f);
 vec3 cameraUp = vec3(0.0f, 1.0f, 0.0f);
 float deltaTime = 0.0f;
 float lastTime = 0.0f;
@@ -48,6 +53,13 @@ bool draw = true;
 float sizeCube = 1.0f;
 float inten = 0.2f;
 float clearColor[4] = { 0.6f, 0.8f, 0.4f, 1.0f };
+float lightColor[3] = { 1.0f, 1.0f, 1.0f };
+float intensity = 0.05f;
+bool isLightActive = true;
+float targetCutOut = 20.5f;
+float currentCutOut = 20.5f;
+float cutOutSpeed = 50.0f;
+double lastKeyPressTime = 0.0; // Variable para almacenar el tiempo de la última presión de tecla f
 
 //MECHANICS
 //bool isJumping = false;
@@ -61,7 +73,7 @@ void processInput(GLFWwindow* window);
 void CameraInput(GLFWwindow* window);
 void Mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void Scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
-void updateWindow(GLFWwindow* window, Shader ourShader, Model ourModel, Shader ourShaderSky, Texture1 ourTextureSky);
+void updateWindow(GLFWwindow* window, Shader ourShader, Model ourModel, Shader ourShaderSky, Texture1 ourTextureSky, Texture1 outTexture);
 
 
 void GeneracionBufferSky();
@@ -70,6 +82,8 @@ void VertexAttribute(int layout, int data, int total, int start);
 void TransformCubo(Shader ourShader);//se necesitan realizar cambios
 void TransformCamera(Shader ourShader, bool isSky);
 void CameraUniform(Shader shaderName);
+void LightUniform(Shader shaderName);
+void ActivePointLight(Shader ourShader, float deltatime, GLFWwindow* window);
 
 void InicialicedImGUI(GLFWwindow* window);
 void ImGUI();
@@ -111,9 +125,15 @@ int main()
 	Shader ourShaderSky("vertexShaderSky.vs", "fragmenShaderSky.fs");
 	Model ourModel("Modelos/laberinto/Laberinto.obj");
 	Texture1 ourTextureSky(textureSky);
+	Texture1 outTexture;
+	
+	//diffuseMap = outTexture.loadTextureID("Modelos/Laberinto/textures/maps_diffuse.png", 2);
+	normalMap = outTexture.loadTextureID("Modelos/laberinto/textures/maps_normal.png", 2);
+	specularMap = outTexture.loadTextureID("Modelos/laberinto/specular.png", 2);
+	heightMap = outTexture.loadTextureID("Modelos/laberinto/textures/maps_height.png", 2);
+	//normalMap = outTexture.loadTextureID("Modelos/laberinto/normal.png", 2);
 
 	camera.Position = vec3(0.0f, 0.0f, 0.0f);
-
 	GeneracionBufferSky();
 	ourTextureSky.GeneraTexturaSky(faces);
 	ourShaderSky.use();
@@ -121,12 +141,15 @@ int main()
 
 	InicialicedImGUI(window);
 
-	updateWindow(window, ourShader, ourModel,ourShaderSky ,ourTextureSky);
+	updateWindow(window, ourShader, ourModel,ourShaderSky ,ourTextureSky, outTexture);
 
 	//SKY
 	glDeleteVertexArrays(1, &VAOSKY);
 	glDeleteBuffers(1, &VBOSKY);
 	glDeleteBuffers(1, &EBOSKY);
+	glDeleteVertexArrays(1, &VAO_N);
+	glDeleteBuffers(1, &VBO_N);
+	glDeleteBuffers(1, &EBO_N);
 
 
 	glfwTerminate();
@@ -248,7 +271,7 @@ void Scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 }
 
 
-void updateWindow(GLFWwindow* window, Shader ourShader, Model ourModel, Shader ourShaderSky, Texture1 ourTextureSky)
+void updateWindow(GLFWwindow* window, Shader ourShader, Model ourModel, Shader ourShaderSky, Texture1 ourTextureSky, Texture1 outTexture)
 {
 	
 	//CARGA DE VENTAANA CADA FRAME
@@ -270,27 +293,19 @@ void updateWindow(GLFWwindow* window, Shader ourShader, Model ourModel, Shader o
 
 		camera.Update(deltaTime);
 
+		outTexture.ViewTexture();
 		ourShader.use();
-
 		ourShader.setFloat("material.shininess", 32.0f);
 		ourShader.setInt("material.diffuse", 0);
-		ourShader.setInt("material.specular", 1);
+		ourShader.setInt("material.specular", 0);
 		
 
-		ourShader.setVec3("light.position", camera.Position);
-		ourShader.setVec3("light.direction", camera.Front);
-		ourShader.setFloat("light.outerCutOff", cos(radians(17.5)));
-		ourShader.setFloat("light.cutOut", cos(radians(17.5f)));
-		ourShader.setVec3("light.ambient", 0.1f, 0.1f, 0.1f);
-		ourShader.setVec3("light.diffuse", 0.8f, 0.8f, 0.8f);
-		ourShader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
-		ourShader.setFloat("light.constant", 1.0f);
-		ourShader.setFloat("light.lineal", 0.09f);
-		ourShader.setFloat("light.quatratic", 0.032f);
+		ActivePointLight(ourShader, deltaTime, window);
 		
 		TransformCamera(ourShader, false);
 		TransformCubo(ourShader);
-		ourModel.Draw(ourShader);
+		if(draw)
+			ourModel.Draw(ourShader);
 
 		//SKY
 		glDepthFunc(GL_LEQUAL);
@@ -311,6 +326,48 @@ void updateWindow(GLFWwindow* window, Shader ourShader, Model ourModel, Shader o
 		glfwPollEvents();
 	}
 	
+}
+
+void ActivePointLight(Shader ourShader, float deltatime, GLFWwindow *window)
+{
+
+	double currentFrameTime = glfwGetTime();
+	// Cambiar targetCutOut cuando se presiona la tecla
+	if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS &&
+		currentFrameTime - lastKeyPressTime > 0.2) {
+
+		lastKeyPressTime = currentFrameTime; // Actualizar el tiempo de la última pulsación
+		if (!isLightActive) {
+			targetCutOut = 20.5f; // Valor objetivo cuando la luz está encendida
+			isLightActive = true;
+		}
+		else {
+			targetCutOut = 0.0f; // Valor objetivo cuando la luz está apagada
+			isLightActive = false;
+		}
+	}
+
+	// Calcular la transición gradual de cutOut
+	if (currentCutOut != targetCutOut) {
+		float delta = cutOutSpeed * deltaTime;
+		if (currentCutOut < targetCutOut) {
+			currentCutOut = std::min(currentCutOut + delta, targetCutOut);
+		}
+		else {
+			currentCutOut = std::max(currentCutOut - delta, targetCutOut);
+		}
+	}
+
+	ourShader.setVec3("light.position", camera.Position);
+	ourShader.setVec3("light.direction", camera.Front);
+	ourShader.setFloat("light.outerCutOff", cos(radians(15.5)));
+	ourShader.setFloat("light.cutOut", cos(radians(currentCutOut)));
+	ourShader.setVec3("light.ambient", 0.01f, 0.01f, 0.01f);
+	ourShader.setVec3("light.diffuse", lightColor[0], lightColor[1], lightColor[2]);
+	ourShader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
+	ourShader.setFloat("light.constant", 1.0f);
+	ourShader.setFloat("light.lineal", intensity);
+	ourShader.setFloat("light.quatratic", 0.000032f);
 }
 
 void TransformCubo(Shader ourShader)//cambia
@@ -337,12 +394,19 @@ void TransformCamera(Shader ourShader, bool isSky)
 	}
 
 	CameraUniform(ourShader);
+	LightUniform(ourShader);
 }
 
 void CameraUniform(Shader shaderName)
 {
 	shaderName.setMat4("projection", projection);
 	shaderName.setMat4("view", view);
+}
+
+void LightUniform(Shader shaderName)
+{
+	shaderName.setVec3("viewPos", camera.Front);
+	shaderName.setVec3("lightPos", camera.Position);
 }
 
 void InicialicedImGUI(GLFWwindow* window)
@@ -362,10 +426,14 @@ void ImGUI()
 	Checkbox("Show-Model", &draw);
 	SliderFloat("Size", &sizeCube, 0.1f, 2.0f);
 	ColorEdit4("BG", clearColor);
+	ColorEdit4("light Color", lightColor);
+	SliderFloat("light intesity", &intensity, -0.01f, 0.5f);
 	Text("Unlock Cursor"); SameLine();
 	TextColored(ImVec4(1, 1, 0, 1), "U"); SameLine(150);
 	Text("Lock Cursor"); SameLine();
 	TextColored(ImVec4(1, 1, 0, 1), "L");
+	Text("Turn on/off spotlight"); SameLine();
+	TextColored(ImVec4(1, 1, 0, 1), "F");
 	End();
 
 	Render();
