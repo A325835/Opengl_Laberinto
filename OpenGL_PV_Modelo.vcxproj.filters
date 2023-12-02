@@ -104,6 +104,9 @@
     <ClInclude Include="SkyBoxVertex.h">
       <Filter>Archivos de encabezado</Filter>
     </ClInclude>
+    <ClInclude Include="Debugger.h">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="fragmentShaderC.fs">
@@ -125,6 +128,12 @@
       <Filter>Archivos de recursos</Filter>
     </None>
     <None Include="fragmentShaderN.fs">
+      <Filter>Archivos de recursos</Filter>
+    </None>
+    <None Include="debugVertexShader.vs">
+      <Filter>Archivos de recursos</Filter>
+    </None>
+    <None Include="debugFragmentShader.fs">
       <Filter>Archivos de recursos</Filter>
     </None>
   </ItemGroup>
