@@ -53,13 +53,14 @@ bool firstMouse = true;
 mat4 projection;
 mat4 view;
 
+bool isLightActive = true;
+bool isFPS = true;
 bool draw = true;
 float sizeCube = 1.0f;
 float inten = 0.2f;
 float clearColor[4] = { 0.6f, 0.8f, 0.4f, 1.0f };
 float lightColor[3] = { 1.0f, 1.0f, 1.0f };
 float intensity = 0.05f;
-bool isLightActive = true;
 float targetCutOut = 20.5f;
 float currentCutOut = 20.5f;
 float cutOutSpeed = 50.0f;
@@ -73,8 +74,10 @@ void initGLFWVersion();
 bool gladLoad();
 
 void framebuffer_size_callback(GLFWwindow* window, int w, int h);
-void processInput(GLFWwindow* window);
+void processInput(GLFWwindow* window, RigidBody* body);
 void CameraInput(GLFWwindow* window);
+void CameraInputFPS(GLFWwindow* window, RigidBody *body);
+
 void Mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void Scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void updateWindow(GLFWwindow* window, Shader ourShader, Model ourModel, Shader ourShaderSky, Texture1 ourTextureSky, Texture1 outTexture);
@@ -88,6 +91,8 @@ void TransformCamera(Shader ourShader, bool isSky);
 void CameraUniform(Shader shaderName);
 void LightUniform(Shader shaderName);
 void ActivePointLight(Shader ourShader, float deltatime, GLFWwindow* window);
+void TransformCubo2(Shader ourShader, Vector3 position, Transform interTransform);
+
 
 void InicialicedImGUI(GLFWwindow* window);
 void ImGUI();
@@ -198,7 +203,7 @@ void framebuffer_size_callback(GLFWwindow* window, int w, int h)
 	glViewport(0, 0, w, h);//Posicion X, posicion Y, ancho, alto
 }
 
-void processInput(GLFWwindow* window)
+void processInput(GLFWwindow* window, RigidBody *body)
 {
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 	{
@@ -212,8 +217,23 @@ void processInput(GLFWwindow* window)
 	{
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	}
-	
-	CameraInput(window);
+	if (glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS)
+	{
+		isFPS = true;
+	}
+	if (glfwGetKey(window, GLFW_KEY_4) == GLFW_PRESS)
+	{
+		isFPS = false;
+	}
+
+	if (isFPS)
+	{
+		CameraInputFPS(window, body);
+	}
+	else
+	{
+		CameraInput(window);
+	}
 }
 
 
@@ -249,11 +269,110 @@ void CameraInput(GLFWwindow* window)
 		camera.UnlockMouse(); // Desbloquea el mouse cuando se presiona la tecla "U"
 		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 	}
-	if (glfwGetKey(window, GLFW_KEY_SPACE)) {
-		// Inicia el salto
-		camera.Jump(9.8f);
+
+}
+
+void CameraInputFPS(GLFWwindow* window, RigidBody *body)
+{
+	vec3 position=camera.Position;
+	vec3 direction = camera.Front;
+	float fm = 0.01;
+
+	// Obtener la posición y la orientación de la cámara
+	Vector3 cameraPosition;
+	Vector3 cameraFront;
+	
+	// Definir la posición relativa a la cámara
+	Vector3 localPositionRelativeToCamera = cameraPosition + (cameraFront); // someDistance es la distancia deseada
+
+	Vector3 forceLeft(0.0, 0.0, 0.005);  // Fuerza hacia adelante
+	Vector3 forceRight(0.0, 0.0, -0.005);  // Fuerza hacia atrás
+	Vector3 forceForward(-0.005, 0.0, 0.0);  // Fuerza hacia la izquierda
+	Vector3 forceBackward(0.005, 0.0, 0.0);  // Fuerza hacia la derecha
+	Vector3 Up(0.0, 0.005, 0.0);  // Fuerza hacia la derecha
+
+	
+	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+	{
+	
+		direction = normalize(camera.Front);
+		
+		camera.ProcessKeyboardFPS(FORWARD, deltaTime);
+		
+		cameraFront = Vector3(direction.x, direction.y, direction.z);
+		body->applyLocalForceAtCenterOfMass(forceForward);
+		
+		
+	}
+	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+	{
+		direction = normalize(camera.Front);
+
+		camera.ProcessKeyboardFPS(BACKWARD, deltaTime);
+	
+		cameraFront = Vector3(direction.x, direction.y, direction.z);
+		body->applyLocalForceAtCenterOfMass(forceBackward);
+	}
+	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
+	{
+		direction = normalize(camera.Front);
+
+		camera.ProcessKeyboardFPS(LEFT, deltaTime);
+	
+		cameraFront = Vector3(direction.x, direction.y, direction.z);
+		body->applyLocalForceAtCenterOfMass(forceLeft);
+	}
+	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
+	{
+		direction = normalize(camera.Front);
+
+		camera.ProcessKeyboardFPS(RIGHT, deltaTime);
+		
+		cameraFront = Vector3(direction.x, direction.y, direction.z);
+		body->applyLocalForceAtCenterOfMass(forceRight);
+	}
+	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+	{
+		camera.ProcessKeyboardFPS(JUMP, deltaTime);
+		
+		if (body->getTransform().getPosition().y < 10)
+		{
+			direction = normalize(camera.Front);
+			
+			position = camera.Position;
+			body->applyLocalForceAtCenterOfMass(Up);
+		}
+
+		//body->setTransform(Transform(Vector3(body->getTransform().getPosition().x, camera.Position.y, body->getTransform().getPosition().z), Quaternion::identity()));
+	}
+	
+
+}
+
+void CameraInputFPSColider(GLFWwindow* window, RigidBody *body)
+{
+	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+	{
+		camera.ProcessKeyboardFPS(FORWARD, deltaTime);
+	}
+	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+	{
+		camera.ProcessKeyboardFPS(BACKWARD, deltaTime);
+	}
+	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
+	{
+		camera.ProcessKeyboardFPS(LEFT, deltaTime);
+	}
+	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
+	{
+		camera.ProcessKeyboardFPS(RIGHT, deltaTime);
+	}
+	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+	{
+		camera.ProcessKeyboardFPS(JUMP, deltaTime);
 	}
 }
+
 
 
 void Mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
@@ -297,7 +416,9 @@ void updateWindow(GLFWwindow* window, Shader ourShader, Model ourModel, Shader o
 	PhysicsWorld* world = physicsCommon.createPhysicsWorld();
 
 	//Creando un rigid body
-	Vector3 position(0.0, 5.0, 0.0);
+	vec3 cameraPosition = camera.Position;
+	Vector3 position(0.0, 15.0 , 0.0);
+
 	Quaternion orientation = Quaternion::identity();
 	Transform transform(position, orientation);
 	RigidBody* body = world->createRigidBody(transform);
@@ -313,13 +434,13 @@ void updateWindow(GLFWwindow* window, Shader ourShader, Model ourModel, Shader o
 
 	//Asignando un collider al rigid body
 	const Vector3 halfExtents(0.5, 0.5, 0.5);
-	BoxShape* boxShape = physicsCommon.createBoxShape(halfExtents);
+	CapsuleShape* capsuleShape = physicsCommon.createCapsuleShape(1.5, 2.0);
 	prevTransform = transform;
 	Collider* collider;
-	collider = body->addCollider(boxShape, transform);
+	collider = body->addCollider(capsuleShape, transform);
 
 	//Piso
-	Vector3 pisoPos(0.0, -2.0, 0.0);
+	Vector3 pisoPos(0.0, 1.0, 0.0);
 	Quaternion pisoOrient = Quaternion::identity();
 	Transform pisoTransf(pisoPos, pisoOrient);
 	RigidBody* piso = world->createRigidBody(pisoTransf);
@@ -335,16 +456,19 @@ void updateWindow(GLFWwindow* window, Shader ourShader, Model ourModel, Shader o
 	deb.enableDebugRendering();
 	
 	//CARGA DE VENTAANA CADA FRAME
+	camera.Position = vec3(position.x, position.y, position.z);
+
 	while (!glfwWindowShouldClose(window))
 	{
+
 
 		float currentTime = glfwGetTime();
 		deltaTime = currentTime - lastTime;
 		lastTime = currentTime;
 		accumulator += deltaTime;
 
-		processInput(window);
-		camera.Update(deltaTime);
+		processInput(window, body);
+		camera.UpdateJump(deltaTime);
 
 		if (accumulator >= timeStep)
 		{
@@ -362,8 +486,17 @@ void updateWindow(GLFWwindow* window, Shader ourShader, Model ourModel, Shader o
 			currTransform = body->getTransform();
 			Transform interTransform = Transform::interpolateTransforms(prevTransform, currTransform, factor);
 			prevTransform = currTransform;
+
+			/*vec3 cameraPosition = camera.Position;
+
+			Vector3 positionColBody(cameraPosition.x, position.y, cameraPosition.z);
+			Quaternion orientationColBody = Quaternion::identity();
+			Transform newTransform(positionColBody, orientationColBody);
+
+			body->setTransform(newTransform);*/
 			
 			float matrix[16];
+
 			interTransform.getOpenGLMatrix(matrix);
 
 			ImGui_ImplOpenGL3_NewFrame();
@@ -408,6 +541,7 @@ void updateWindow(GLFWwindow* window, Shader ourShader, Model ourModel, Shader o
 
 			debugShader.use();
 			TransformCamera(debugShader, false);
+			TransformCubo2(debugShader,position, interTransform);
 			deb.drawColliders();
 
 			ImGUI();
@@ -471,6 +605,28 @@ void TransformCubo(Shader ourShader)//cambia
 		//modelo = rotate(modelo, radians(-45.0f), vec3(0.3f, 0.7f, 0.0f));
 		modelo = scale(modelo, vec3(sizeCube));
 		ourShader.setMat4("model", modelo);
+}
+
+
+
+void TransformCubo2(Shader ourShader, Vector3 position, Transform interTransform)
+{
+	glBindVertexArray(VAO);
+	float matrix[16];
+	interTransform.getOpenGLMatrix(matrix);
+
+	mat4 modelo = mat4(
+		matrix[0], matrix[1], matrix[2], matrix[3],
+		matrix[4], matrix[5], matrix[6], matrix[7],
+		matrix[8], matrix[9], matrix[10], matrix[11],
+		matrix[12], matrix[13], matrix[14], matrix[15]
+	);
+	modelo = translate(modelo, vec3(position.x, position.y, position.z));
+	modelo = rotate(modelo, radians(-45.0f), vec3(0.3f, 0.7f, 0.0f));
+	ourShader.setMat4("modelo", modelo);
+
+	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+
 }
 
 void TransformCamera(Shader ourShader, bool isSky)
