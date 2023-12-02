@@ -1,4 +1,5 @@
 #include <iostream>
+#include "reactphysics3d/reactphysics3d.h"
 
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
@@ -20,12 +21,15 @@
 #include "SkyBoxVertex.h"
 #include "Model.h"
 #include "Texture.h"
+#include "Debugger.h"
 
 using namespace std;
 using namespace ImGui;
+using namespace reactphysics3d;
 
 unsigned int VBOSKY, VAOSKY, EBOSKY;
 unsigned int VBO_N, VAO_N = 0, EBO_N;
+unsigned int VAO, VBO, EBO;
 unsigned int textureSky;
 unsigned int specularMap;
 unsigned int normalMap;
@@ -92,6 +96,14 @@ void FinalizarImGUI();
 int main()
 {
 	initGLFWVersion();
+	PhysicsCommon physicsCommon;
+	PhysicsWorld* world = physicsCommon.createPhysicsWorld();
+
+	Vector3 position(0, 20, 0);
+	Quaternion orientacion = Quaternion::identity();
+	Transform transform(position, orientacion);
+	RigidBody* body = world->createRigidBody(transform);
+	
 
 	//Creacion de ventana
 	GLFWwindow* window = glfwCreateWindow(width, height, "Winton OPENGL", NULL, NULL);//alto, ancho, nombre, si se puede modficar
@@ -273,56 +285,137 @@ void Scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 
 void updateWindow(GLFWwindow* window, Shader ourShader, Model ourModel, Shader ourShaderSky, Texture1 ourTextureSky, Texture1 outTexture)
 {
+
+	//Simular physicas
+	float timeStep = 1.0f / 30.0f;
+	double accumulator = 0.0f;
+	Transform prevTransform;
+	Transform currTransform;
+
+	//Crear mundo
+	PhysicsCommon physicsCommon;
+	PhysicsWorld* world = physicsCommon.createPhysicsWorld();
+
+	//Creando un rigid body
+	Vector3 position(0.0, 5.0, 0.0);
+	Quaternion orientation = Quaternion::identity();
+	Transform transform(position, orientation);
+	RigidBody* body = world->createRigidBody(transform);
+
+	/*
+	- STATIC: masa infinita, velocidad cero, posicion manual (ej. piso)
+	- KINEMATIC: masa infinita, velocidad manual, posicion calculada (ej. plataforma)
+	- DYNAMIC:  masa definidad, velocidad calculada, posicion calculada (ej. objetos o personaje)
+	*/
+	body->setType(BodyType::DYNAMIC);
+	body->setLinearDamping(1.25);
+	body->setAngularDamping(1.25);
+
+	//Asignando un collider al rigid body
+	const Vector3 halfExtents(0.5, 0.5, 0.5);
+	BoxShape* boxShape = physicsCommon.createBoxShape(halfExtents);
+	prevTransform = transform;
+	Collider* collider;
+	collider = body->addCollider(boxShape, transform);
+
+	//Piso
+	Vector3 pisoPos(0.0, -2.0, 0.0);
+	Quaternion pisoOrient = Quaternion::identity();
+	Transform pisoTransf(pisoPos, pisoOrient);
+	RigidBody* piso = world->createRigidBody(pisoTransf);
+
+	piso->setType(BodyType::STATIC);
+	Vector3 pisoHalfExt(10.0, 0.1, 10.0);
+	BoxShape* pisoBox = physicsCommon.createBoxShape(pisoHalfExt);
+	Collider* pisoCollider = piso->addCollider(pisoBox, pisoTransf);
+
+	//Render de physicas
+	Shader debugShader("debugVertexShader.vs", "debugFragmentShader.fs");
+	Debugger deb(world);
+	deb.enableDebugRendering();
 	
 	//CARGA DE VENTAANA CADA FRAME
 	while (!glfwWindowShouldClose(window))
 	{
-		
+
 		float currentTime = glfwGetTime();
 		deltaTime = currentTime - lastTime;
 		lastTime = currentTime;
+		accumulator += deltaTime;
 
 		processInput(window);
-
-		glClearColor(clearColor[0], clearColor[1], clearColor[2], clearColor[3]);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-		ImGui_ImplOpenGL3_NewFrame();
-		ImGui_ImplGlfw_NewFrame();
-		NewFrame();
-
 		camera.Update(deltaTime);
 
-		outTexture.ViewTexture();
-		ourShader.use();
-		ourShader.setFloat("material.shininess", 32.0f);
-		ourShader.setInt("material.diffuse", 0);
-		ourShader.setInt("material.specular", 0);
-		
+		if (accumulator >= timeStep)
+		{
+			glClearColor(clearColor[0], clearColor[1], clearColor[2], clearColor[3]);
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		ActivePointLight(ourShader, deltaTime, window);
-		
-		TransformCamera(ourShader, false);
-		TransformCubo(ourShader);
-		if(draw)
-			ourModel.Draw(ourShader);
+			//Calculos de las f?sicas
+			while (accumulator >= timeStep)
+			{
+				world->update(timeStep);
+				accumulator -= timeStep;
+			}
 
-		//SKY
-		glDepthFunc(GL_LEQUAL);
-		ourShaderSky.use();
-		TransformCamera(ourShaderSky, true);
-		glBindVertexArray(VAOSKY);
-		ourTextureSky.ViewTextureSKY();
-		glDepthFunc(GL_LESS);
+			decimal factor = accumulator / timeStep;
+			currTransform = body->getTransform();
+			Transform interTransform = Transform::interpolateTransforms(prevTransform, currTransform, factor);
+			prevTransform = currTransform;
+			
+			float matrix[16];
+			interTransform.getOpenGLMatrix(matrix);
 
+			ImGui_ImplOpenGL3_NewFrame();
+			ImGui_ImplGlfw_NewFrame();
+			NewFrame();
 
-		ImGUI();
+			outTexture.ViewTexture();
+			ourShader.use();
+			ourShader.setFloat("material.shininess", 32.0f);
+			ourShader.setInt("material.diffuse", 0);
+			ourShader.setInt("material.specular", 0);
 
-		//glm::vec3 cameraPosition = camera.Position;
-		//std::cout << "Posición de la cámara: (" << cameraPosition.x << ", " << cameraPosition.y << ", " << cameraPosition.z << ")" << std::endl;
+			ActivePointLight(ourShader, deltaTime, window);
 
+			TransformCamera(ourShader, false);
+			TransformCubo(ourShader);
+			if (draw)
+				ourModel.Draw(ourShader);
 
-		glfwSwapBuffers(window);
+			/*glBindVertexArray(VAO);
+
+			mat4 model = mat4(
+				matrix[0], matrix[1], matrix[2], matrix[3],
+				matrix[4], matrix[5], matrix[6], matrix[7],
+				matrix[8], matrix[9], matrix[10], matrix[11],
+				matrix[12], matrix[13], matrix[14], matrix[15]
+			);
+			model = translate(model, vec3(position.x, position.y, position.z));
+			
+			ourShader.setMat4("model", model);
+			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+			ourModel.Draw(ourShader);*/
+			//SKY
+			glDepthFunc(GL_LEQUAL);
+			ourShaderSky.use();
+			TransformCamera(ourShaderSky, true);
+			glBindVertexArray(VAOSKY);
+			ourTextureSky.ViewTextureSKY();
+			glDepthFunc(GL_LESS);
+
+			//Debug Rendering
+
+			debugShader.use();
+			TransformCamera(debugShader, false);
+			deb.drawColliders();
+
+			ImGUI();
+
+			//glm::vec3 cameraPosition = camera.Position;
+			//std::cout << "Posición de la cámara: (" << cameraPosition.x << ", " << cameraPosition.y << ", " << cameraPosition.z << ")" << std::endl;
+			glfwSwapBuffers(window);
+		}
 		glfwPollEvents();
 	}
 	
