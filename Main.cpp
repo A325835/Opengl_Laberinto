@@ -300,7 +300,7 @@ void CameraInputFPS(GLFWwindow* window, RigidBody *body)
 		camera.ProcessKeyboardFPS(FORWARD, deltaTime);
 		
 		cameraFront = Vector3(direction.x, direction.y, direction.z);
-		body->applyLocalForceAtCenterOfMass(forceForward);
+		body->setTransform(Transform(Vector3(camera.Position.x, body->getTransform().getPosition().y, camera.Position.z), Quaternion::identity()));
 		
 		
 	}
@@ -311,7 +311,7 @@ void CameraInputFPS(GLFWwindow* window, RigidBody *body)
 		camera.ProcessKeyboardFPS(BACKWARD, deltaTime);
 	
 		cameraFront = Vector3(direction.x, direction.y, direction.z);
-		body->applyLocalForceAtCenterOfMass(forceBackward);
+		body->setTransform(Transform(Vector3(camera.Position.x, body->getTransform().getPosition().y, camera.Position.z), Quaternion::identity()));
 	}
 	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
 	{
@@ -320,7 +320,7 @@ void CameraInputFPS(GLFWwindow* window, RigidBody *body)
 		camera.ProcessKeyboardFPS(LEFT, deltaTime);
 	
 		cameraFront = Vector3(direction.x, direction.y, direction.z);
-		body->applyLocalForceAtCenterOfMass(forceLeft);
+		body->setTransform(Transform(Vector3(camera.Position.x, body->getTransform().getPosition().y, camera.Position.z), Quaternion::identity()));
 	}
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
 	{
@@ -417,7 +417,7 @@ void updateWindow(GLFWwindow* window, Shader ourShader, Model ourModel, Shader o
 
 	//Creando un rigid body
 	vec3 cameraPosition = camera.Position;
-	Vector3 position(0.0, 15.0 , 0.0);
+	Vector3 position(0.0, 0.0 , 0.0);
 
 	Quaternion orientation = Quaternion::identity();
 	Transform transform(position, orientation);
@@ -434,19 +434,19 @@ void updateWindow(GLFWwindow* window, Shader ourShader, Model ourModel, Shader o
 
 	//Asignando un collider al rigid body
 	const Vector3 halfExtents(0.5, 0.5, 0.5);
-	CapsuleShape* capsuleShape = physicsCommon.createCapsuleShape(1.5, 2.0);
+	CapsuleShape* capsuleShape = physicsCommon.createCapsuleShape(1.5, 3.5);
 	prevTransform = transform;
 	Collider* collider;
 	collider = body->addCollider(capsuleShape, transform);
 
-	//Piso
-	Vector3 pisoPos(0.0, 1.0, 0.0);
+	//Piso  -68.9814  -10.998 -6.54624  
+	Vector3 pisoPos(-34.4907, -3.27312, - 5.494);
 	Quaternion pisoOrient = Quaternion::identity();
 	Transform pisoTransf(pisoPos, pisoOrient);
 	RigidBody* piso = world->createRigidBody(pisoTransf);
 
 	piso->setType(BodyType::STATIC);
-	Vector3 pisoHalfExt(10.0, 0.1, 10.0);
+	Vector3 pisoHalfExt(101.0, 0.1, 101.0);
 	BoxShape* pisoBox = physicsCommon.createBoxShape(pisoHalfExt);
 	Collider* pisoCollider = piso->addCollider(pisoBox, pisoTransf);
 
