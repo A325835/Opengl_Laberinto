@@ -45,6 +45,14 @@ public:
 
     unsigned int VAO;
 
+    const std::vector<Vertex>& getVertices() const {
+        return vertices;
+    }
+
+    const std::vector<unsigned int>& getIndices() const {
+        return indices;
+    }
+
     // constructor
     Mesh(vector<Vertex> vertices, vector<unsigned int> indices, vector<Texture> textures)
     {

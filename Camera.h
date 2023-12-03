@@ -5,15 +5,16 @@ enum Camera_Movement {
     FORWARD,
     BACKWARD,
     LEFT,
-    RIGHT
+    RIGHT,
+    JUMP
 };
 
 const float YAW = -90.0f;
 const float PITCH = 0.0f;
-const float SPEED = 5.5f;
+const float SPEED = 3.5f;
 const float SENSITIVITY = 0.1f;
 const float ZOOM = 45.0f;
-const float gravity = -13.8f;
+const float JUMP_SPEED = 5.0f;
 
 
 class Camera
@@ -24,7 +25,6 @@ public:
     vec3 Up;
     vec3 Right;
     vec3 WorldUp;
-    vec3 jumpVelocity = vec3(0.0f, 0.0f, 0.0f);
 
     float Yaw;
     float Pitch;
@@ -32,8 +32,12 @@ public:
     float MovementSpeed;
     float MouseSensitivity;
     float Zoom;
+
+    float JumpStartY;
+    const float GRAVITY = 9.81f;
+    float JumpVelocity;
     bool IsMouseLocked = true;
-    bool isJumping = false;
+    bool IsJumping = false;
 
     void LockMouse()
     {
@@ -56,6 +60,8 @@ public:
         WorldUp = up;
         Yaw = yaw;
         Pitch = pitch;
+        JumpVelocity = 0.0f;
+        IsJumping = false;
         updateCameraVectors();
         IsMouseLocked = true;
     }
@@ -94,11 +100,41 @@ public:
         {
             Position += Right * velocity;
         }
-        if (!isJumping)
+        
+    }
+
+    void ProcessKeyboardFPS(Camera_Movement direction, float deltaTime)
+    {
+        float velocity = MovementSpeed * deltaTime;
+        if (direction == FORWARD)
         {
-            Position.y = 0.0;
+            vec3 newPosition = Position + Front * velocity;
+            newPosition.y = Position.y;
+            Position = newPosition;
         }
-        Position.y = std::max(Position.y, 0.0f);
+        if (direction == BACKWARD)
+        {
+            vec3 newPosition = Position - Front * velocity;
+            newPosition.y = Position.y;
+            Position = newPosition;
+        }
+        if (direction == LEFT)
+        {
+            vec3 newPosition = Position - Right * velocity;
+            newPosition.y = Position.y;
+            Position = newPosition;
+        }
+        if (direction == RIGHT)
+        {
+            vec3 newPosition = Position + Right * velocity;
+            newPosition.y = Position.y;
+            Position = newPosition;
+        }
+        if (direction == JUMP && !IsJumping)
+        {
+            IsJumping = true;
+            JumpVelocity = JUMP_SPEED;
+        }
     }
 
     void ProcessMouseMovement(float xoffset, float yoffset, GLboolean constrainPitch = true)
@@ -137,26 +173,18 @@ public:
         }
     }
 
-    void Jump(float jumpSpeed)
-    {
-        if (!isJumping) {
-            isJumping = true;
-            jumpVelocity.y = jumpSpeed;
-        }
-    }
+   
 
-    void Update(float deltaTime)
+    void UpdateJump(float deltaTime)
     {
-        if (isJumping) {
-            // Calcula la nueva posición vertical
-            Position.y += jumpVelocity.y * deltaTime;
-            jumpVelocity.y += gravity * deltaTime;
-
-            // Verifica si el jugador ha llegado al suelo
-            if (Position.y <= 0.0f) {
+        if (IsJumping)
+        {
+            Position.y += JumpVelocity * deltaTime;
+            JumpVelocity -= GRAVITY * deltaTime;
+            if (Position.y <= 0.0f)
+            {
                 Position.y = 0.0f;
-                isJumping = false;
-                jumpVelocity.y = 0.0f;
+                IsJumping = false;
             }
         }
     }
