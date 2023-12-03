@@ -51,6 +51,16 @@ public:
         loadModel(path);
     }
 
+    const Mesh& getMesh(unsigned int index) const {
+        if (index < meshes.size()) {
+            return meshes[index];
+        }
+        else {
+            // Handle out-of-bounds index (you might want to throw an exception)
+            throw std::out_of_range("Invalid mesh index");
+        }
+    }
+
     // draws the model, and thus all its meshes
     void Draw(Shader& shader)
     {
@@ -95,6 +105,8 @@ private:
             processNode(node->mChildren[i], scene);
         }
     }
+
+
 
     Mesh processMesh(aiMesh* mesh, const aiScene* scene)
     {

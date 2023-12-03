@@ -468,17 +468,14 @@ void updateWindow(GLFWwindow* window, Shader ourShader, Model ourModel, Shader o
 	Collider* pisoCollider = piso->addCollider(pisoBox, pisoTransf);
 
 
-	//Laberinto
+//Laberinto
+// Assuming you have loaded your concave 3D model into ourModel
 
-	// Assuming you have loaded your concave 3D model into ourModel
+// Extract vertices from the loaded model for the second mesh
+	const std::vector<Vertex>& allVertices = ourModel.getMesh(0).getVertices();
 
-// Extract vertices from the loaded model
-	const std::vector<Vertex>& allVertices = ourModel.getVertices();
-
-	// Extract indices from the loaded model   aqui invalid model data
-	const std::vector<unsigned int>& indicesUnsigned = ourModel.getIndices();
-	
-
+	// Extract indices from the loaded model for the second mesh
+	const std::vector<unsigned int>& indicesUnsigned = ourModel.getMesh(0).getIndices();
 
 	// Convert indices to int if necessary
 	std::vector<int> indices(indicesUnsigned.begin(), indicesUnsigned.end());
@@ -486,12 +483,12 @@ void updateWindow(GLFWwindow* window, Shader ourShader, Model ourModel, Shader o
 	// Check if the model data is valid
 	if (allVertices.empty() || indices.empty()) {
 		// Handle error: Print an error message or throw an exception
-		std::cerr << "Error: Invalid model data." << std::endl;
+		std::cerr << "Error: Invalid model data for the second mesh." << std::endl;
 		// Add appropriate error handling here
 	}
 	else {
-		// Create a TriangleVertexArray
-		TriangleVertexArray* triangleArray = new TriangleVertexArray(
+		// Create a TriangleVertexArray for the second mesh
+		TriangleVertexArray* triangleArray2 = new TriangleVertexArray(
 			static_cast<int>(allVertices.size()),
 			reinterpret_cast<const float*>(allVertices.data()),
 			sizeof(Vertex),
@@ -503,26 +500,27 @@ void updateWindow(GLFWwindow* window, Shader ourShader, Model ourModel, Shader o
 		);
 
 		// Create a TriangleMesh
-		TriangleMesh* triangleMesh = physicsCommon.createTriangleMesh();
+		TriangleMesh* triangleMesh2 = physicsCommon.createTriangleMesh();
 
 		// Add the triangle vertex array to the triangle mesh
-		triangleMesh->addSubpart(triangleArray);
+		triangleMesh2->addSubpart(triangleArray2);
 
 		// Create a ConcaveMeshShape using the TriangleMesh
-		ConcaveMeshShape* meshShape = physicsCommon.createConcaveMeshShape(triangleMesh);
+		ConcaveMeshShape* meshShape2 = physicsCommon.createConcaveMeshShape(triangleMesh2);
 
-		// Set up the transform for the mesh
-		Vector3 modelPosition(0.0, 0.0, 0.0); // Adjust the position as needed
-		Quaternion modelOrientation = Quaternion::identity(); // Adjust the orientation as needed
-		Transform modelTransform(modelPosition, modelOrientation);
+		// Set up the transform for the second mesh
+		Vector3 modelPosition2(0.0, 0.0, 0.0); // Adjust the position as needed
+		Quaternion modelOrientation2 = Quaternion::identity(); // Adjust the orientation as needed
+		Transform modelTransform2(modelPosition2, modelOrientation2);
 
-		// Create a rigid body for the mesh
-		RigidBody* meshRigidBody = world->createRigidBody(modelTransform);
-		meshRigidBody->setType(BodyType::STATIC);
+		// Create a rigid body for the second mesh
+		RigidBody* meshRigidBody2 = world->createRigidBody(modelTransform2);
+		meshRigidBody2->setType(BodyType::STATIC);
 
 		// Add a collider to the rigid body
-		Collider* meshCollider = meshRigidBody->addCollider(meshShape, modelTransform);
+		Collider* meshCollider2 = meshRigidBody2->addCollider(meshShape2, modelTransform2);
 	}
+
 
 
 
