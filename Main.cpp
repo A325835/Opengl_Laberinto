@@ -102,14 +102,6 @@ void FinalizarImGUI();
 int main()
 {
 	initGLFWVersion();
-	PhysicsCommon physicsCommon;
-	PhysicsWorld* world = physicsCommon.createPhysicsWorld();
-
-	Vector3 position(0, 20, 0);
-	Quaternion orientacion = Quaternion::identity();
-	Transform transform(position, orientacion);
-	RigidBody* body = world->createRigidBody(transform);
-	
 
 	//Creacion de ventana
 	GLFWwindow* window = glfwCreateWindow(width, height, "Winton OPENGL", NULL, NULL);//alto, ancho, nombre, si se puede modficar
@@ -135,6 +127,7 @@ int main()
 	stbi_set_flip_vertically_on_load(true);
 
 	glEnable(GL_DEPTH_TEST);
+	limite = (sizeof(texture) / sizeof(texture[0]));
 
 	Shader ourShader("vertexShaderC.vs", "fragmentShaderC.fs");
 	//mandamos a llamar al modelo en lugar del texture y el light ya que esto lo hace el modelo
