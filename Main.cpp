@@ -22,6 +22,7 @@
 #include "Model.h"
 #include "Texture.h"
 #include "Debugger.h"
+#include "variables.h"
 
 using namespace std;
 using namespace ImGui;
@@ -142,13 +143,29 @@ int main()
 	Shader ourShaderSky("vertexShaderSky.vs", "fragmenShaderSky.fs");
 	Model ourModel("Modelos/laberinto/Laberinto.obj");
 	Texture1 ourTextureSky(textureSky);
-	Texture1 outTexture;
+	//Texture1 outTexture;
 	
 	//diffuseMap = outTexture.loadTextureID("Modelos/Laberinto/textures/maps_diffuse.png", 2);
-	normalMap = outTexture.loadTextureID("Modelos/laberinto/textures/maps_normal.png", 2);
-	specularMap = outTexture.loadTextureID("Modelos/laberinto/specular.png", 2);
-	heightMap = outTexture.loadTextureID("Modelos/laberinto/textures/maps_height.png", 2);
+	//normalMap = outTexture.loadTextureID("Modelos/laberinto/textures/maps_normal.png", 2);
+	//specularMap = outTexture.loadTextureID("Modelos/laberinto/specular.png", 2);
+	//heightMap = outTexture.loadTextureID("Modelos/laberinto/textures/maps_height.png", 2);
 	//normalMap = outTexture.loadTextureID("Modelos/laberinto/normal.png", 2);
+
+	Texture1 ourTexture(texture, limite);
+
+	for (int i = 0; i < limite; i++)
+	{
+		ourTexture.GeneraTextura(texture[i], nombre[i], tipo[i]);
+	}
+
+	if (limite > 1)
+	{
+		ourShader.use();
+		for (int i = 0; i < limite; i++)
+		{
+			ourShader.setInt(ourTexture.UniformTexture(), i);
+		}
+	}
 
 	camera.Position = vec3(0.0f, 0.0f, 0.0f);
 	GeneracionBufferSky();
@@ -158,7 +175,7 @@ int main()
 
 	InicialicedImGUI(window);
 
-	updateWindow(window, ourShader, ourModel,ourShaderSky ,ourTextureSky, outTexture);
+	updateWindow(window, ourShader, ourModel,ourShaderSky ,ourTextureSky, ourTexture);
 
 	//SKY
 	glDeleteVertexArrays(1, &VAOSKY);
@@ -289,7 +306,7 @@ void CameraInputFPS(GLFWwindow* window, RigidBody *body)
 	Vector3 forceRight(0.0, 0.0, -0.005);  // Fuerza hacia atrás
 	Vector3 forceForward(-0.005, 0.0, 0.0);  // Fuerza hacia la izquierda
 	Vector3 forceBackward(0.005, 0.0, 0.0);  // Fuerza hacia la derecha
-	Vector3 Up(0.0, 0.005, 0.0);  // Fuerza hacia la derecha
+	Vector3 Up(0.0, 0.0025, 0.0);  // Fuerza hacia la derecha
 
 	
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
@@ -329,7 +346,7 @@ void CameraInputFPS(GLFWwindow* window, RigidBody *body)
 		camera.ProcessKeyboardFPS(RIGHT, deltaTime);
 		
 		cameraFront = Vector3(direction.x, direction.y, direction.z);
-		body->applyLocalForceAtCenterOfMass(forceRight);
+		body->setTransform(Transform(Vector3(camera.Position.x, body->getTransform().getPosition().y, camera.Position.z), Quaternion::identity()));
 	}
 	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
 	{
@@ -417,7 +434,7 @@ void updateWindow(GLFWwindow* window, Shader ourShader, Model ourModel, Shader o
 
 	//Creando un rigid body
 	vec3 cameraPosition = camera.Position;
-	Vector3 position(0.0, 0.0 , 0.0);
+	Vector3 position(0.0, 0.0, 0.0);
 
 	Quaternion orientation = Quaternion::identity();
 	Transform transform(position, orientation);
@@ -440,7 +457,7 @@ void updateWindow(GLFWwindow* window, Shader ourShader, Model ourModel, Shader o
 	collider = body->addCollider(capsuleShape, transform);
 
 	//Piso  -68.9814  -10.998 -6.54624  
-	Vector3 pisoPos(-34.4907, -3.27312, - 5.494);
+	Vector3 pisoPos(-34.4907, -3.27312, -5.494);
 	Quaternion pisoOrient = Quaternion::identity();
 	Transform pisoTransf(pisoPos, pisoOrient);
 	RigidBody* piso = world->createRigidBody(pisoTransf);
@@ -449,6 +466,66 @@ void updateWindow(GLFWwindow* window, Shader ourShader, Model ourModel, Shader o
 	Vector3 pisoHalfExt(101.0, 0.1, 101.0);
 	BoxShape* pisoBox = physicsCommon.createBoxShape(pisoHalfExt);
 	Collider* pisoCollider = piso->addCollider(pisoBox, pisoTransf);
+
+
+	//Laberinto
+
+	// Assuming you have loaded your concave 3D model into ourModel
+
+// Extract vertices from the loaded model
+	const std::vector<Vertex>& allVertices = ourModel.getVertices();
+
+	// Extract indices from the loaded model   aqui invalid model data
+	const std::vector<unsigned int>& indicesUnsigned = ourModel.getIndices();
+	
+
+
+	// Convert indices to int if necessary
+	std::vector<int> indices(indicesUnsigned.begin(), indicesUnsigned.end());
+
+	// Check if the model data is valid
+	if (allVertices.empty() || indices.empty()) {
+		// Handle error: Print an error message or throw an exception
+		std::cerr << "Error: Invalid model data." << std::endl;
+		// Add appropriate error handling here
+	}
+	else {
+		// Create a TriangleVertexArray
+		TriangleVertexArray* triangleArray = new TriangleVertexArray(
+			static_cast<int>(allVertices.size()),
+			reinterpret_cast<const float*>(allVertices.data()),
+			sizeof(Vertex),
+			static_cast<int>(indices.size()),
+			indices.data(),
+			sizeof(int),
+			TriangleVertexArray::VertexDataType::VERTEX_FLOAT_TYPE,
+			TriangleVertexArray::IndexDataType::INDEX_INTEGER_TYPE
+		);
+
+		// Create a TriangleMesh
+		TriangleMesh* triangleMesh = physicsCommon.createTriangleMesh();
+
+		// Add the triangle vertex array to the triangle mesh
+		triangleMesh->addSubpart(triangleArray);
+
+		// Create a ConcaveMeshShape using the TriangleMesh
+		ConcaveMeshShape* meshShape = physicsCommon.createConcaveMeshShape(triangleMesh);
+
+		// Set up the transform for the mesh
+		Vector3 modelPosition(0.0, 0.0, 0.0); // Adjust the position as needed
+		Quaternion modelOrientation = Quaternion::identity(); // Adjust the orientation as needed
+		Transform modelTransform(modelPosition, modelOrientation);
+
+		// Create a rigid body for the mesh
+		RigidBody* meshRigidBody = world->createRigidBody(modelTransform);
+		meshRigidBody->setType(BodyType::STATIC);
+
+		// Add a collider to the rigid body
+		Collider* meshCollider = meshRigidBody->addCollider(meshShape, modelTransform);
+	}
+
+
+
 
 	//Render de physicas
 	Shader debugShader("debugVertexShader.vs", "debugFragmentShader.fs");

@@ -16,10 +16,34 @@ class Model
 public:
 
     // model data 
-    vector<Texture> textures_loaded;	// stores all the textures loaded so far, optimization to make sure textures aren't loaded more than once.
+    vector<Texture> textures_loaded;    // stores all the textures loaded so far, optimization to make sure textures aren't loaded more than once.
     vector<Mesh>    meshes;
     string directory;
     bool gammaCorrection;
+
+
+
+    std::vector<Vertex> getVertices() const {
+        std::vector<Vertex> allVertices;
+
+        for (const Mesh& mesh : meshes) {
+            const std::vector<Vertex>& meshVertices = mesh.getVertices();
+            allVertices.insert(allVertices.end(), meshVertices.begin(), meshVertices.end());
+        }
+
+        return allVertices;
+    }
+
+    const std::vector<unsigned int>& getIndices() const {
+        std::vector<unsigned int> allIndices;
+
+        for (const Mesh& mesh : meshes) {
+            const std::vector<unsigned int>& meshIndices = mesh.getIndices();
+            allIndices.insert(allIndices.end(), meshIndices.begin(), meshIndices.end());
+        }
+
+        return allIndices;
+    }
 
     // constructor, expects a filepath to a 3D model.
     Model(string const& path, bool gamma = false) : gammaCorrection(gamma)
@@ -234,6 +258,9 @@ private:
     }
 };
 
+#endif
+
+
 
 unsigned int TextureFromFile(const char* path, const string& directory, bool gamma)
 {
@@ -274,4 +301,3 @@ unsigned int TextureFromFile(const char* path, const string& directory, bool gam
 
     return textureID;
 }
-#endif
