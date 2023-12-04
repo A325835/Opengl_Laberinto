@@ -425,7 +425,7 @@ void updateWindow(GLFWwindow* window, Shader ourShader, Model ourModel, Shader o
 	RigidBody* piso = world->createRigidBody(pisoTransf);
 
 	piso->setType(BodyType::STATIC);
-	Vector3 pisoHalfExt(101.0, 0.1, 101.0);
+	Vector3 pisoHalfExt(101.0, 0.1, 131.0);
 	BoxShape* pisoBox = physicsCommon.createBoxShape(pisoHalfExt);
 	Collider* pisoCollider = piso->addCollider(pisoBox, pisoTransf);
 
@@ -652,7 +652,7 @@ void TransformCubo(Shader ourShader)//cambia
 
 void TransformCamera(Shader ourShader, bool isSky)
 {
-	projection = perspective(radians(camera.Zoom), (float)width / (float)height, 0.1f, 100.0f);
+	projection = perspective(radians(camera.Zoom), (float)width / (float)height, 0.1f, 200.0f);
 
 	if (isSky)
 	{
