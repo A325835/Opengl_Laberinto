@@ -441,6 +441,7 @@ void updateWindow(GLFWwindow* window, Shader ourShader, Model ourModel, Shader o
 	body->setType(BodyType::DYNAMIC);
 	body->setLinearDamping(1.25);
 	body->setAngularDamping(1.25);
+	body->setAngularLockAxisFactor(Vector3(0.0, 1.0, 0.0));
 
 	//Asignando un collider al rigid body
 	const Vector3 halfExtents(0.5, 0.5, 0.5);
@@ -460,56 +461,32 @@ void updateWindow(GLFWwindow* window, Shader ourShader, Model ourModel, Shader o
 	BoxShape* pisoBox = physicsCommon.createBoxShape(pisoHalfExt);
 	Collider* pisoCollider = piso->addCollider(pisoBox, pisoTransf);
 
-	const int nbVertices = 8;
-	const int nbTriangles = 12;
 
-	// Coordenadas de vértices para un cubo
-	float vertices[3 * nbVertices] = {
-		// Cara frontal
-		-1.0f, 1.0f, 1.0f,   // Vértice 0 (superior izquierdo)
-		 1.0f, 1.0f, 1.0f,   // Vértice 1 (superior derecho)
-		-1.0f, -1.0f, 1.0f,  // Vértice 2 (inferior izquierdo)
-		 1.0f, -1.0f, 1.0f,  // Vértice 3 (inferior derecho)
-		 // Cara posterior
-		 -1.0f, 1.0f, -1.0f,  // Vértice 4 (superior izquierdo)
-		  1.0f, 1.0f, -1.0f,  // Vértice 5 (superior derecho)
-		 -1.0f, -1.0f, -1.0f, // Vértice 6 (inferior izquierdo)
-		  1.0f, -1.0f, -1.0f  // Vértice 7 (inferior derecho)
-	};
+	const Mesh& firstMesh = ourModel.getMesh(0);
+	const std::vector<unsigned int>& indices = firstMesh.getIndices();
+	const int nbVertices = firstMesh.getVertices().size();
+	const int nbTriangles = indices.size() / 3;
 
-	// Índices de triángulos para un cubo
-	int indices[3 * nbTriangles] = {
-		// Cara frontal
-		0, 1, 2,
-		2, 1, 3,
-		// Cara superior
-		0, 1, 4,
-		4, 1, 5,
-		// Cara posterior
-		4, 5, 6,
-		6, 5, 7,
-		// Cara inferior
-		2, 3, 6,
-		6, 3, 7,
-		// Cara derecha
-		1, 3, 5,
-		5, 3, 7,
-		// Cara izquierda
-		0, 2, 4,
-		4, 2, 6
-	};
+	
+	std::vector<float> vertices;
+	for (const Vertex& vertex : firstMesh.getVertices()) {
+		vertices.push_back(vertex.Position.x);
+		vertices.push_back(vertex.Position.y);
+		vertices.push_back(vertex.Position.z);
+	}
 
 	// Crear un TriangleVertexArray
 	TriangleVertexArray* triangleArray = new TriangleVertexArray(
 		nbVertices,
-		vertices,
+		vertices.data(),  // Obtén el puntero al primer elemento del vector
 		3 * sizeof(float),
 		nbTriangles,
-		indices,
-		3 * sizeof(int),
+		indices.data(),   // Obtén el puntero al primer elemento del vector
+		3 * sizeof(unsigned int),
 		TriangleVertexArray::VertexDataType::VERTEX_FLOAT_TYPE,
 		TriangleVertexArray::IndexDataType::INDEX_INTEGER_TYPE
 	);
+
 
 	// Crear un TriangleMesh
 	TriangleMesh* triangleMesh = physicsCommon.createTriangleMesh();
