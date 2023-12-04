@@ -418,7 +418,7 @@ void updateWindow(GLFWwindow* window, Shader ourShader, Model ourModel, Shader o
 	//Simular physicas
 	float timeStep = 1.0f / 30.0f;
 	double accumulator = 0.0f;
-	Transform prevTransform;
+	
 	Transform currTransform;
 
 	//Crear mundo
@@ -445,7 +445,7 @@ void updateWindow(GLFWwindow* window, Shader ourShader, Model ourModel, Shader o
 	//Asignando un collider al rigid body
 	const Vector3 halfExtents(0.5, 0.5, 0.5);
 	CapsuleShape* capsuleShape = physicsCommon.createCapsuleShape(1.5, 3.5);
-	prevTransform = transform;
+	Transform prevTransform = Transform::identity();
 	Collider* collider;
 	collider = body->addCollider(capsuleShape, transform);
 
@@ -460,59 +460,77 @@ void updateWindow(GLFWwindow* window, Shader ourShader, Model ourModel, Shader o
 	BoxShape* pisoBox = physicsCommon.createBoxShape(pisoHalfExt);
 	Collider* pisoCollider = piso->addCollider(pisoBox, pisoTransf);
 
+	const int nbVertices = 8;
+	const int nbTriangles = 12;
 
-//Laberinto
-// Assuming you have loaded your concave 3D model into ourModel
+	// Coordenadas de vértices para un cubo
+	float vertices[3 * nbVertices] = {
+		// Cara frontal
+		-1.0f, 1.0f, 1.0f,   // Vértice 0 (superior izquierdo)
+		 1.0f, 1.0f, 1.0f,   // Vértice 1 (superior derecho)
+		-1.0f, -1.0f, 1.0f,  // Vértice 2 (inferior izquierdo)
+		 1.0f, -1.0f, 1.0f,  // Vértice 3 (inferior derecho)
+		 // Cara posterior
+		 -1.0f, 1.0f, -1.0f,  // Vértice 4 (superior izquierdo)
+		  1.0f, 1.0f, -1.0f,  // Vértice 5 (superior derecho)
+		 -1.0f, -1.0f, -1.0f, // Vértice 6 (inferior izquierdo)
+		  1.0f, -1.0f, -1.0f  // Vértice 7 (inferior derecho)
+	};
 
-// Extract vertices from the loaded model for the second mesh
-	const std::vector<Vertex>& allVertices = ourModel.getMesh(0).getVertices();
+	// Índices de triángulos para un cubo
+	int indices[3 * nbTriangles] = {
+		// Cara frontal
+		0, 1, 2,
+		2, 1, 3,
+		// Cara superior
+		0, 1, 4,
+		4, 1, 5,
+		// Cara posterior
+		4, 5, 6,
+		6, 5, 7,
+		// Cara inferior
+		2, 3, 6,
+		6, 3, 7,
+		// Cara derecha
+		1, 3, 5,
+		5, 3, 7,
+		// Cara izquierda
+		0, 2, 4,
+		4, 2, 6
+	};
 
-	// Extract indices from the loaded model for the second mesh
-	const std::vector<unsigned int>& indicesUnsigned = ourModel.getMesh(0).getIndices();
+	// Crear un TriangleVertexArray
+	TriangleVertexArray* triangleArray = new TriangleVertexArray(
+		nbVertices,
+		vertices,
+		3 * sizeof(float),
+		nbTriangles,
+		indices,
+		3 * sizeof(int),
+		TriangleVertexArray::VertexDataType::VERTEX_FLOAT_TYPE,
+		TriangleVertexArray::IndexDataType::INDEX_INTEGER_TYPE
+	);
 
-	// Convert indices to int if necessary
-	std::vector<int> indices(indicesUnsigned.begin(), indicesUnsigned.end());
+	// Crear un TriangleMesh
+	TriangleMesh* triangleMesh = physicsCommon.createTriangleMesh();
 
-	// Check if the model data is valid
-	if (allVertices.empty() || indices.empty()) {
-		// Handle error: Print an error message or throw an exception
-		std::cerr << "Error: Invalid model data for the second mesh." << std::endl;
-		// Add appropriate error handling here
-	}
-	else {
-		// Create a TriangleVertexArray for the second mesh
-		TriangleVertexArray* triangleArray2 = new TriangleVertexArray(
-			static_cast<int>(allVertices.size()),
-			reinterpret_cast<const float*>(allVertices.data()),
-			sizeof(Vertex),
-			static_cast<int>(indices.size()),
-			indices.data(),
-			sizeof(int),
-			TriangleVertexArray::VertexDataType::VERTEX_FLOAT_TYPE,
-			TriangleVertexArray::IndexDataType::INDEX_INTEGER_TYPE
-		);
+	// Agregar el TriangleVertexArray al TriangleMesh
+	triangleMesh->addSubpart(triangleArray);
 
-		// Create a TriangleMesh
-		TriangleMesh* triangleMesh2 = physicsCommon.createTriangleMesh();
+	// Crear el ConcaveMeshShape usando el TriangleMesh
+	ConcaveMeshShape* concaveMesh = physicsCommon.createConcaveMeshShape(triangleMesh);
 
-		// Add the triangle vertex array to the triangle mesh
-		triangleMesh2->addSubpart(triangleArray2);
+	// Configurar la transformación para el objeto
+	Vector3 modelPosition(0.0, 0.0, 0.0); // Ajustar la posición según sea necesario
+	Quaternion modelOrientation = Quaternion::identity(); // Ajustar la orientación según sea necesario
+	Transform modelTransform(modelPosition, modelOrientation);
 
-		// Create a ConcaveMeshShape using the TriangleMesh
-		ConcaveMeshShape* meshShape2 = physicsCommon.createConcaveMeshShape(triangleMesh2);
+	// Crear un RigidBody para el objeto
+	RigidBody* meshRigidBody = world->createRigidBody(modelTransform);
+	meshRigidBody->setType(BodyType::STATIC);
 
-		// Set up the transform for the second mesh
-		Vector3 modelPosition2(0.0, 0.0, 0.0); // Adjust the position as needed
-		Quaternion modelOrientation2 = Quaternion::identity(); // Adjust the orientation as needed
-		Transform modelTransform2(modelPosition2, modelOrientation2);
-
-		// Create a rigid body for the second mesh
-		RigidBody* meshRigidBody2 = world->createRigidBody(modelTransform2);
-		meshRigidBody2->setType(BodyType::STATIC);
-
-		// Add a collider to the rigid body
-		Collider* meshCollider2 = meshRigidBody2->addCollider(meshShape2, modelTransform2);
-	}
+	// Agregar un colisionador al RigidBody
+	Collider* meshCollider = meshRigidBody->addCollider(concaveMesh, modelTransform);
 
 
 
@@ -530,11 +548,10 @@ void updateWindow(GLFWwindow* window, Shader ourShader, Model ourModel, Shader o
 	{
 
 
-		float currentTime = glfwGetTime();
+		double currentTime = glfwGetTime();
 		deltaTime = currentTime - lastTime;
 		lastTime = currentTime;
 		accumulator += deltaTime;
-
 		processInput(window, body);
 		camera.UpdateJump(deltaTime);
 
@@ -549,7 +566,6 @@ void updateWindow(GLFWwindow* window, Shader ourShader, Model ourModel, Shader o
 				world->update(timeStep);
 				accumulator -= timeStep;
 			}
-
 			decimal factor = accumulator / timeStep;
 			currTransform = body->getTransform();
 			Transform interTransform = Transform::interpolateTransforms(prevTransform, currTransform, factor);
