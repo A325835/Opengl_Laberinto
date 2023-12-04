@@ -173,8 +173,6 @@ public:
         }
     }
 
-   
-
     void UpdateJump(float deltaTime)
     {
         if (IsJumping)

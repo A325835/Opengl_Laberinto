@@ -21,6 +21,50 @@ public:
     string directory;
     bool gammaCorrection;
 
+    int getVertexCount() const {
+        int totalVertices = 0;
+        for (const Mesh& mesh : meshes) {
+            totalVertices += mesh.getVertices().size();
+        }
+        return totalVertices;
+    }
+
+    int getIndicesCount() const {
+        int totalIndices = 0;
+        for (const Mesh& mesh : meshes) {
+            totalIndices += mesh.getIndices().size();
+        }
+        return totalIndices;
+    }
+    std::vector<float> getVerticesData() const {
+        std::vector<float> allVerticesData;
+
+        for (const Mesh& mesh : meshes) {
+            const std::vector<Vertex>& meshVertices = mesh.getVertices();
+            for (const Vertex& vertex : meshVertices) {
+                // Agregar las coordenadas del vértice al vector
+                allVerticesData.push_back(vertex.Position.x);
+                allVerticesData.push_back(vertex.Position.y);
+                allVerticesData.push_back(vertex.Position.z);
+            }
+        }
+
+        return allVerticesData;
+    }
+
+    // Nueva función para obtener los índices de triángulos
+    std::vector<int> getIndicesData() const {
+        std::vector<int> allIndicesData;
+
+        for (const Mesh& mesh : meshes) {
+            const std::vector<unsigned int>& meshIndices = mesh.getIndices();
+            allIndicesData.insert(allIndicesData.end(), meshIndices.begin(), meshIndices.end());
+        }
+
+        return allIndicesData;
+    }
+
+    // ... Otras partes de la clase ...
 
 
     std::vector<Vertex> getVertices() const {
